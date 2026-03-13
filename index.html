@@ -788,7 +788,7 @@ let S=JSON.parse(localStorage.getItem('jtb3')||'null')||{
   start90:null,poidsObj:70,revObj:2000,
   revenus:[],depenses:[],seances:[],poids:[],
   todos:null,extraTodos:[],prospects:{},clients:0,checkDate:null,_ts:0,
-  todoHistory:[],nutritionChecks:{},sportChecks:{}
+  todoHistory:[],nutritionChecks:{},sportChecks:{},agendaSynced:{}
 };
 const save=()=>{
   S._ts=Date.now();
@@ -1061,9 +1061,12 @@ function initPlanState(){
     S.weekTemplate=DEF_TMPL.map(day=>day.map(ev=>({...ev,id:'wt-'+Math.random().toString(36).slice(2,8)})));
   if(!S.agendaEvents)S.agendaEvents=[];
   if(!S.customColors)S.customColors={};
+  if(!S.agendaSynced)S.agendaSynced={};
 }
 function agendaSyncDay(dateStr){
-  if(S.agendaEvents.some(ev=>ev.date===dateStr))return;
+  if(!S.agendaSynced)S.agendaSynced={};
+  if(S.agendaSynced[dateStr])return;
+  S.agendaSynced[dateStr]=true;
   const dow=(new Date(dateStr+'T12:00').getDay()+6)%7;
   (S.weekTemplate[dow]||[]).forEach(ev=>S.agendaEvents.push({...ev,id:'ag-'+Math.random().toString(36).slice(2,8),date:dateStr,fromTmpl:true}));
 }
