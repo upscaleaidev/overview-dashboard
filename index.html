@@ -1128,7 +1128,7 @@ function tgDrop(e,newDayKey){
   if(!_dgId)return;
   const rect=e.currentTarget.getBoundingClientRect();
   const rawH=PLAN_SH+((e.clientY-rect.top)/PLAN_HH)-_dgOffH;
-  const snapH=Math.round(rawH*4)/4;
+  const snapH=Math.round(rawH);
   const newSH=Math.max(PLAN_SH,Math.min(PLAN_EH-0.5,snapH));
   if(planTab==='template'){
     const ev=S.weekTemplate.flat().find(e=>e.id===_dgId);
