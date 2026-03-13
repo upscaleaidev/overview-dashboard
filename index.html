@@ -271,15 +271,15 @@ hr{border:none;border-top:1px solid var(--border);margin:16px 0}
 .color-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:99px;border:1px solid rgba(255,255,255,.1);font-size:11px;font-weight:600;cursor:pointer;transition:border-color .15s}
 .color-chip:hover{border-color:rgba(255,255,255,.25)}
 .color-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.tg-outer{overflow-x:auto;overflow-y:auto;max-height:70vh;-webkit-overflow-scrolling:touch;border-radius:var(--r);border:1px solid var(--border);background:rgba(8,8,14,.5)}
+.tg-outer{overflow-x:auto;overflow-y:auto;max-height:calc(100vh - 180px);-webkit-overflow-scrolling:touch;border-radius:var(--r);border:1px solid var(--border);background:rgba(8,8,14,.5)}
 .tg{display:flex;min-width:560px}
 .tg-hours{width:40px;flex-shrink:0;padding-top:36px;background:rgba(8,8,14,.6)}
-.tg-hour-cell{height:52px;display:flex;align-items:flex-start;justify-content:flex-end;padding:3px 4px 0 0;font-family:var(--mono);font-size:8px;color:var(--muted);border-top:1px solid rgba(255,255,255,.04)}
+.tg-hour-cell{height:34px;display:flex;align-items:flex-start;justify-content:flex-end;padding:3px 4px 0 0;font-family:var(--mono);font-size:8px;color:var(--muted);border-top:1px solid rgba(255,255,255,.04)}
 .tg-days{display:flex;flex:1}
 .tg-day-col{flex:1;min-width:72px;border-left:1px solid rgba(255,255,255,.04);position:relative}
 .tg-day-head{height:36px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;font-weight:700;position:sticky;top:0;z-index:10;background:rgba(8,8,14,.97);border-bottom:1px solid var(--border);line-height:1.2}
 .tg-day-head.today{color:var(--accent)}
-.tg-cell{height:52px;border-top:1px solid rgba(255,255,255,.03);cursor:pointer;transition:background .1s;position:absolute;left:0;right:0}
+.tg-cell{height:34px;border-top:1px solid rgba(255,255,255,.03);cursor:pointer;transition:background .1s;position:absolute;left:0;right:0}
 .tg-cell:hover{background:rgba(255,255,255,.02)}
 .tg-cell.drag-over{background:rgba(212,255,0,.07)}
 .tg-event{position:absolute;left:3px;right:3px;border-radius:6px;padding:3px 6px;font-size:9.5px;font-weight:600;line-height:1.3;overflow:hidden;cursor:pointer;z-index:2;border-left:3px solid;box-shadow:0 2px 6px rgba(0,0,0,.25);transition:opacity .15s}
@@ -487,12 +487,16 @@ hr{border:none;border-top:1px solid var(--border);margin:16px 0}
         <span class="score-badge" id="td-score">0/18</span>
       </div>
       <div id="td-list"></div>
+      <div class="irow" style="margin-top:8px">
+        <input type="text" id="new-routine-todo" placeholder="Ajouter à la routine..." onkeydown="if(event.key==='Enter')addRoutineTodo()">
+        <button class="btn btn-sm" onclick="addRoutineTodo()">＋</button>
+      </div>
     </div>
     <div class="slabel">Tâches business</div>
     <div class="card">
       <div id="td-extra"></div>
       <div class="irow">
-        <input type="text" id="new-todo" placeholder="Ajouter une tâche..." onkeydown="if(event.key==='Enter')addTodo()">
+        <input type="text" id="new-todo" placeholder="Ajouter une tâche business..." onkeydown="if(event.key==='Enter')addTodo()">
         <button class="btn btn-sm" onclick="addTodo()">＋</button>
       </div>
     </div>
@@ -772,6 +776,7 @@ const DAILY=[
   {id:'t11',label:'No fap',done:false,cat:'discipline'},
   {id:'t12',label:'No Sofia',done:false,cat:'discipline'},
   {id:'t13',label:'No doomscroll',done:false,cat:'discipline'},
+  {id:'t19',label:'No smoke',done:false,cat:'discipline'},
   {id:'t14',label:'Créatine',done:false,cat:'corps'},
   {id:'t15',label:'Whey',done:false,cat:'corps'},
   {id:'t16',label:'Oméga 3',done:false,cat:'corps'},
@@ -989,6 +994,11 @@ function addTodo(){
   const inp=document.getElementById('new-todo');const v=inp.value.trim();if(!v)return;
   S.extraTodos.push({id:'e'+Date.now(),label:v,done:false});inp.value='';save();renderTodo();
 }
+function addRoutineTodo(){
+  const inp=document.getElementById('new-routine-todo');const v=inp.value.trim();if(!v)return;
+  S.todos.push({id:'r'+Date.now(),label:v,done:false,cat:'custom'});
+  inp.value='';save();renderTodo();renderMiniTodos();renderTodoGauge();renderHistory();
+}
 
 // ═══ BUSINESS ═══
 let chRev=null;
@@ -1033,7 +1043,7 @@ function saveClients(){S.clients=parseInt(document.getElementById('inp-clients')
 function saveRevObj(){S.revObj=parseFloat(document.getElementById('inp-rev-obj').value)||2000;save();renderBiz()}
 
 // ═══ PLANNING V2 ═══
-const PLAN_SH=6,PLAN_EH=23,PLAN_HH=52;
+const PLAN_SH=7,PLAN_EH=22,PLAN_HH=34;
 const DEF_COLORS={sport:{name:'Sport',hex:'#4ade80'},work:{name:'Travail',hex:'#60a5fa'},prospect:{name:'Prospection',hex:'#c084fc'},rest:{name:'Repos',hex:'#fb923c'},rando:{name:'Rando',hex:'#d4ff00'},code:{name:'Code route',hex:'#f87171'}};
 function allColors(){return {...DEF_COLORS,...(S.customColors||{})}}
 function colorHex(k){const c=allColors()[k];return c?c.hex:DEF_COLORS.work.hex}
@@ -1431,31 +1441,31 @@ function renderNutrition(dir=''){
 
 // ═══ SPORT ═══
 const SPORT_PROG=[
-  {day:'Lundi',type:'Upper',
-    warmup:['5 min mobilité articulaire','5 min cardio léger (jumping jacks, bras)'],
-    exos:[{id:'se1',l:'Pompes déclinées lestées',s:'4×6-12'},{id:'se2',l:'Dips chaise',s:'3×8-15'},{id:'se3',l:'Développé militaire',s:'4×10-15'},{id:'se4',l:'Élévations latérales',s:'3×15-25'},{id:'se5',l:'Curl biceps',s:'3×12-20'},{id:'se6',l:'Planche',s:'2×45-60s'}],
-    stretch:['Étirements épaules + pecs (10 min)','Étirements biceps']},
-  {day:'Mardi',type:'Lower + Core',
-    warmup:['5 min mobilité articulaire (hanches, chevilles)','5 min cardio léger'],
-    exos:[{id:'se7',l:'Squat tempo lesté',s:'4×10-15'},{id:'se8',l:'Bulgares',s:'3×8-12/jambe'},{id:'se9',l:'Hip thrust',s:'4×12-25'},{id:'se10',l:'Mollets',s:'3×20-30'},{id:'se11',l:'Dead bug',s:'3×12/côté'},{id:'se12',l:'Planche',s:'2×45s'}],
-    stretch:['Étirements quadriceps, ischio, hanches (10 min)']},
-  {day:'Mercredi',type:'Repos',rest:true,restNote:'Marche légère 10-15 min post cheat meal'},
-  {day:'Jeudi',type:'Back + Arms',
-    warmup:['5 min mobilité articulaire (épaules, dos)','5 min cardio léger'],
-    exos:[{id:'se13',l:'Rowing unilatéral sac',s:'5×10-20/bras'},{id:'se14',l:'Oiseau buste penché',s:'4×15-25'},{id:'se15',l:'Curl marteau',s:'3×12-20'},{id:'se16',l:'Curl biceps',s:'3×12-20'},{id:'se17',l:'Superman hold',s:'3×30-45s'}],
-    stretch:['Étirements dos, biceps, épaules (10 min)']},
-  {day:'Vendredi',type:'Circuit densité',note:'4 tours · Repos 90s entre tours',tours:4,
-    warmup:['5 min mobilité articulaire','5 min cardio léger'],
+  {day:'Lundi',type:'Upper',tours:4,tourLabel:'Série',restTime:90,
+    warmup:['2 min jumping jacks','Rotations épaules 10× chaque sens','Rotations poignets 10× chaque sens','Cercles de bras avant + arrière 15 reps','Mobilité thoracique : rotation assis 8× côté'],
+    exos:[{id:'se1',l:'Pompes déclinées lestées',s:'6-12 reps'},{id:'se2',l:'Dips chaise',s:'8-15 reps'},{id:'se3',l:'Développé militaire',s:'10-15 reps'},{id:'se4',l:'Élévations latérales',s:'15-25 reps'},{id:'se5',l:'Curl biceps',s:'12-20 reps'},{id:'se6',l:'Planche',s:'45-60s'}],
+    stretch:['Étirement pectoral au mur 30s × côté','Étirement épaule croisée 30s × côté','Étirement biceps pouce bas 20s × côté','Roulement lent nuque 30s','Posture enfant décompression 60s']},
+  {day:'Mardi',type:'Lower + Core',tours:4,tourLabel:'Série',restTime:90,
+    warmup:['2 min high knees','Rotations hanches 10× chaque sens','Balancés de jambes latéraux 15× jambe','Squats corporels lents × 10 tempo 3s','Hip circles debout 10× chaque sens'],
+    exos:[{id:'se7',l:'Squat tempo lesté',s:'10-15 reps'},{id:'se8',l:'Bulgares',s:'8-12 reps/jambe'},{id:'se9',l:'Hip thrust',s:'12-25 reps'},{id:'se10',l:'Mollets debout',s:'20-30 reps'},{id:'se11',l:'Dead bug',s:'12 reps/côté'},{id:'se12',l:'Planche',s:'45s'}],
+    stretch:['Étirement quadriceps debout 30s × jambe','Étirement ischio assis jambe tendue 30s × jambe','Fente basse étirement fléchisseur 30s × côté','Étirement mollet au mur 30s × jambe','Pigeon yoga au sol 45s × côté']},
+  {day:'Mercredi',type:'Repos',rest:true,restNote:'Marche légère 10-15 min · Pas d\'entraînement'},
+  {day:'Jeudi',type:'Back + Arms',tours:4,tourLabel:'Série',restTime:90,
+    warmup:['2 min jumping jacks','Rotations épaules 10× chaque sens','Band pull-apart simulé 15 reps','Rotations thoraciques assis 10× côté','Étirement dynamique latissimus 10× côté'],
+    exos:[{id:'se13',l:'Rowing unilatéral sac',s:'10-20 reps/bras'},{id:'se14',l:'Oiseau buste penché',s:'15-25 reps'},{id:'se15',l:'Curl marteau',s:'12-20 reps'},{id:'se16',l:'Curl biceps supination',s:'12-20 reps'},{id:'se17',l:'Superman hold',s:'30-45s'}],
+    stretch:['Étirement grand dorsal bras levé 30s × côté','Étirement biceps bras en arrière 20s × côté','Torsion assis rhomboïdes 30s × côté','Posture enfant élargie dorsaux 60s','Décompression colonne suspendu 30s']},
+  {day:'Vendredi',type:'Circuit densité',note:'4 tours · Repos 90s entre tours',tours:4,tourLabel:'Tour',restTime:90,
+    warmup:['2 min high knees','1 min jumping jacks','Rotations complètes épaules + hanches 10×','Squats sautés × 10 30% intensité','Mobilité thoracique rotation 10×'],
     exos:[{id:'se18',l:'Pompes',s:'8-15 reps'},{id:'se19',l:'Squat lesté',s:'12-20 reps'},{id:'se20',l:'Rowing sac',s:'12-20 reps'},{id:'se21',l:'Dips',s:'8-15 reps'},{id:'se22',l:'Planche',s:'45s'}],
-    stretch:['Étirements full body (10 min)']},
-  {day:'Samedi',type:'Pump + Posture',
-    warmup:['5 min mobilité articulaire','5 min cardio léger'],
-    exos:[{id:'se23',l:'Pompes prise large',s:'4×max-3'},{id:'se24',l:'Élévations latérales',s:'5×20'},{id:'se25',l:'Oiseau buste penché',s:'4×20'},{id:'se26',l:'Curl biceps',s:'4×15-20'}],
-    stretch:['Étirements épaules + pecs (8-10 min)']},
+    stretch:['Étirement pectoral au mur 30s × côté','Fente étirement complet 30s × côté','Torsion assis dos 30s × côté','Posture enfant 60s','Corps entier extension + rotation 30s']},
+  {day:'Samedi',type:'Pump + Posture',tours:4,tourLabel:'Série',restTime:90,
+    warmup:['2 min jumping jacks','Rotations épaules 15× chaque sens','Cercles de bras géants 10 reps','Face pull simulation 15 reps','Mobilité posturale cat-cow × 10'],
+    exos:[{id:'se23',l:'Pompes prise large',s:'max-3 reps'},{id:'se24',l:'Élévations latérales',s:'20 reps'},{id:'se25',l:'Oiseau buste penché',s:'20 reps'},{id:'se26',l:'Curl biceps',s:'15-20 reps'}],
+    stretch:['Étirement pectoral porte 30s','Étirement épaule croisée 30s × côté','Correcteur postural prise omoplate 45s','Étirement biceps bras en arrière 20s × côté','Décompression nuque 30s × côté']},
   {day:'Dimanche',type:'Rando + Mobilité',
-    warmup:[],
-    exos:[{id:'se27',l:'Rando 3-4h',s:''}],
-    stretch:['Mobilité hanches (10 min)','Étirements pecs','Exercices de respiration']}
+    warmup:['Rotations chevilles 10× chaque sens avant départ','Rotations hanches 10× chaque sens','Fentes dynamiques 10× jambe','Étirements mollets dynamiques 10×'],
+    exos:[{id:'se27',l:'Rando 3-4h terrain naturel',s:''}],
+    stretch:['Mobilité hanches cercles + fentes profondes 2 min','Étirements quadriceps debout 30s × jambe','Étirements mollets au mur 30s × jambe','Étirements pectoraux au mur 30s × côté','Exercices respiration diaphragmatique 5 cycles','Posture enfant décompression 60s']}
 ];
 
 function sportToggle(dateKey,id){
@@ -1492,7 +1502,7 @@ function renderSport(dir=''){
     const warmupIds=prog.warmup.map((_,i)=>'w'+i);
     const stretchIds=(prog.stretch||[]).map((_,i)=>'str'+i);
     let exoIds=[];
-    if(prog.tours){for(let t=1;t<=prog.tours;t++)prog.exos.forEach(e=>exoIds.push(e.id+'-t'+t));}
+    if(prog.tours){for(let t=1;t<=prog.tours;t++){prog.exos.forEach(e=>exoIds.push(e.id+'-t'+t));exoIds.push('rest-t'+t);}}
     else exoIds=prog.exos.map(e=>e.id);
     const allIds=[...warmupIds,...exoIds,...stretchIds];
     const total=allIds.length;const doneCnt=allIds.filter(id=>checks[id]).length;
@@ -1510,9 +1520,12 @@ function renderSport(dir=''){
       prog.warmup.forEach((w,i)=>{const id='w'+i;const d=!!checks[id];h+=`<div class="exo-row" onclick="sportToggle('${dateKey}','${id}')"><div class="exo-check ${d?'done':''}"></div><span class="exo-label ${d?'done':''}">${w}</span></div>`;});
     }
     if(prog.tours){
+      const lbl=prog.tourLabel||'Tour';
       for(let t=1;t<=prog.tours;t++){
-        h+=`<div class="sport-section-title" style="color:var(--orange)">🔁 Tour ${t}/${prog.tours}</div>`;
+        h+=`<div class="sport-section-title" style="color:var(--orange)">🔁 ${lbl} ${t}/${prog.tours}</div>`;
         prog.exos.forEach(e=>{const id=e.id+'-t'+t;const d=!!checks[id];h+=`<div class="exo-row" onclick="sportToggle('${dateKey}','${id}')"><div class="exo-check ${d?'done':''}"></div><span class="exo-label ${d?'done':''}">${e.l}</span>${e.s?`<span class="exo-sets">${e.s}</span>`:''}</div>`;});
+        const restId='rest-t'+t;const rd=!!checks[restId];
+        h+=`<div class="exo-row" onclick="sportToggle('${dateKey}','${restId}')"><div class="exo-check ${rd?'done':''}"></div><span class="exo-label ${rd?'done':''}" style="color:var(--orange)">⏱ ${prog.restTime||90}s repos</span></div>`;
       }
     } else {
       h+=`<div class="sport-section-title">💪 Exercices</div>`;
