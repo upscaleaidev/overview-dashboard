@@ -408,7 +408,7 @@ hr{border:none;border-top:1px solid var(--border);margin:16px 0}
     <div class="card gap">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
         <div class="card-title" style="margin:0">Routine du jour</div>
-        <span class="score-badge" id="td-score">0/10</span>
+        <span class="score-badge" id="td-score">0/16</span>
       </div>
       <div id="td-list"></div>
     </div>
@@ -724,6 +724,10 @@ function dailyReset(){
     S.checkDate=t;S.todos=DAILY.map(x=>({...x,done:false}));save();
   } else if(!S.todos||!S.todos.length){
     S.todos=DAILY.map(x=>({...x,done:false}));save();
+  } else {
+    const ids=S.todos.map(x=>x.id);
+    const newItems=DAILY.filter(x=>!ids.includes(x.id));
+    if(newItems.length){S.todos=[...S.todos,...newItems.map(x=>({...x,done:false}))];save();}
   }
 }
 
