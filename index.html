@@ -759,7 +759,9 @@ function go(v,btn){
   document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active'));
   document.getElementById('view-'+v).classList.add('active');
   if(btn)btn.classList.add('active');
+  else{const nb=document.querySelector(`.nav-item[onclick*="go('${v}"]`);if(nb)nb.classList.add('active');}
   document.getElementById('mob-title').textContent=TITLES[v]||v;
+  sessionStorage.setItem('activeView',v);
   closeSB();
   const r={home:renderHome,todo:renderTodo,business:renderBiz,planning:renderPlan,corps:renderCorps,budget:renderBudget,cfg:renderCfg};
   if(r[v])r[v]();
@@ -1057,7 +1059,7 @@ function saveFB(){
 }
 
 // ═══ INIT ═══
-dailyReset();initFirebase();renderHome();
+dailyReset();initFirebase();go(sessionStorage.getItem('activeView')||'home');
 setInterval(()=>{dailyReset();r90()},60000);
 </script>
 </body>
