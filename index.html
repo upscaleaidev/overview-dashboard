@@ -321,9 +321,11 @@ hr{border:none;border-top:1px solid var(--border);margin:16px 0}
   html,body{overflow:auto}
   .app{height:auto;min-height:100vh;flex-direction:column;overflow:visible}
   .main{overflow:visible}
-  .tg-mob-wrap .tg-outer{max-height:calc(100vh - 320px);overflow-x:hidden}
+  .tg-mob-wrap .tg-outer{max-height:none;overflow:visible;border-radius:var(--r);border:1px solid var(--border)}
+  .tg-mob-wrap .tg{min-width:0}
   .tg-mob-wrap .tg-day-col{min-width:0;flex:1}
-  .tg-mob-wrap .tg-day-head{font-size:10px}
+  .tg-mob-wrap .tg-day-head{position:relative;font-size:11px}
+  .tg-mob-wrap .tg-hours{background:transparent}
   .card-big{font-size:28px}
   .ph-title{font-size:22px}
 }
