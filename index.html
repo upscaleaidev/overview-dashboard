@@ -1434,7 +1434,15 @@ function tgDrop(e,newDayKey){
   const newSH=Math.max(PLAN_SH,Math.min(PLAN_EH-0.5,snapH));
   if(planTab==='template'){
     const ev=S.weekTemplate.flat().find(e=>e.id===_dgId);
-    if(ev){const dur=ev.endH-ev.startH;S.weekTemplate.forEach(day=>{const i=day.findIndex(e=>e.id===_dgId);if(i>=0)day.splice(i,1);});ev.startH=newSH;ev.endH=newSH+dur;S.weekTemplate[parseInt(newDayKey)].push(ev);}
+    if(ev){
+      const dur=ev.endH-ev.startH;
+      let oldDow=-1;S.weekTemplate.forEach((day,di)=>{if(day.find(e=>e.id===_dgId))oldDow=di;});
+      S.weekTemplate.forEach(day=>{const i=day.findIndex(e=>e.id===_dgId);if(i>=0)day.splice(i,1);});
+      ev.startH=newSH;ev.endH=newSH+dur;
+      const newDow=parseInt(newDayKey);S.weekTemplate[newDow].push(ev);
+      for(let i=0;i<60;i++){const d=new Date();d.setDate(d.getDate()+i);const ds=d.toISOString().slice(0,10);const dow=(new Date(ds+'T12:00').getDay()+6)%7;if(dow===oldDow||dow===newDow)agendaReSyncDay(ds);}
+      dailyReset();
+    }
   } else {
     const ev=S.agendaEvents.find(e=>e.id===_dgId);
     if(ev){const dur=ev.endH-ev.startH;ev.startH=newSH;ev.endH=newSH+dur;ev.date=newDayKey;ev.manuallyMoved=true;}
