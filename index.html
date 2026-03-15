@@ -703,6 +703,26 @@ hr{border:none;border-top:1px solid var(--border);margin:16px 0}
       <div class="ph-sub">Paramètres · Défi · Objectifs</div>
     </div>
     <div class="card gap">
+      <div class="card-title">🔑 Claude API — Crédits personnels</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:12px">Utilise tes crédits API Claude achetés (sk-ant-...). <a href="https://console.anthropic.com/account/keys" target="_blank" style="color:var(--accent);text-decoration:none">Obtiens une clé</a></div>
+      <div class="irow">
+        <input type="password" id="cfg-api-key" placeholder="sk-ant-v4-..." style="font-family:var(--mono)">
+        <button class="btn btn-sm" onclick="showAPIKey()" style="padding:7px 12px;min-width:50px">👁</button>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:8px">
+        <div id="cfg-api-status">Non configurée</div>
+        <div id="cfg-api-credits" style="margin-top:4px"></div>
+      </div>
+      <div class="irow" style="margin-top:12px">
+        <button class="btn btn-sm" onclick="saveAPIKey()">Sauvegarder</button>
+        <button class="btn btn-sm btn-ghost" onclick="testAPIKey()">Tester</button>
+        <button class="btn btn-sm btn-ghost" onclick="clearAPIKey()" style="color:var(--red)">Supprimer</button>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;padding:10px;background:var(--glass);border-radius:8px">
+        💡 La clé est stockée localement (localStorage) uniquement. Jamais envoyée au serveur.
+      </div>
+    </div>
+    <div class="card gap">
       <div class="card-title">Date de départ du défi 90 jours</div>
       <div class="irow">
         <input type="date" id="cfg-start">
@@ -1615,7 +1635,89 @@ function renderCfg(){
   const fb=localStorage.getItem('jtb3_fb');
   if(fb)document.getElementById('cfg-fb').value=fb;
   document.getElementById('fb-status').textContent=fbReady?'✓ Connecté':'Non connecté';
+
+  // Render API Key status
+  const apiKey=localStorage.getItem('life_api_key');
+  const statusEl=document.getElementById('cfg-api-status');
+  if(apiKey&&apiKey.startsWith('sk-ant-')){
+    const masked=apiKey.slice(0,10)+'...'+apiKey.slice(-4);
+    statusEl.innerHTML=`✓ <span style="color:var(--green)">Configurée</span> (${masked})`;
+  }else{
+    statusEl.innerHTML='⚠ Non configurée';
+  }
+  document.getElementById('cfg-api-key').value=apiKey||'';
+
   renderDailyBackups();
+}
+
+// API Key Management
+function saveAPIKey(){
+  const key=document.getElementById('cfg-api-key').value.trim();
+  if(!key){
+    alert('❌ Clé vide');
+    return;
+  }
+  if(!key.startsWith('sk-ant-')){
+    alert('❌ Format invalide. Doit commencer par sk-ant-');
+    return;
+  }
+  localStorage.setItem('life_api_key',key);
+  alert('✅ Clé API sauvegardée (stockée localement)');
+  renderCfg();
+}
+
+function showAPIKey(){
+  const input=document.getElementById('cfg-api-key');
+  input.type=input.type==='password'?'text':'password';
+}
+
+function clearAPIKey(){
+  if(!confirm('Supprimer la clé API?'))return;
+  localStorage.removeItem('life_api_key');
+  document.getElementById('cfg-api-key').value='';
+  alert('✅ Clé supprimée');
+  renderCfg();
+}
+
+async function testAPIKey(){
+  const key=localStorage.getItem('life_api_key');
+  if(!key){
+    alert('❌ Aucune clé configurée');
+    return;
+  }
+
+  document.getElementById('cfg-api-status').textContent='🔄 Test en cours...';
+
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key':key,
+        'anthropic-version':'2023-06-01'
+      },
+      body:JSON.stringify({
+        model:'claude-3-5-sonnet-20241022',
+        max_tokens:50,
+        messages:[{role:'user',content:'Dis ok brièvement'}]
+      })
+    });
+
+    if(res.ok){
+      const data=await res.json();
+      document.getElementById('cfg-api-status').innerHTML='✓ <span style="color:var(--green)">Connexion réussie!</span>';
+      alert('✅ Clé API valide et fonctionnelle');
+    }else if(res.status===401){
+      document.getElementById('cfg-api-status').innerHTML='✗ <span style="color:var(--red)">Clé invalide</span>';
+      alert('❌ Clé API invalide ou expirée');
+    }else{
+      throw new Error(`Status ${res.status}`);
+    }
+  }catch(e){
+    document.getElementById('cfg-api-status').innerHTML='✗ <span style="color:var(--red)">Erreur: '+e.message+'</span>';
+    alert('❌ Erreur: '+e.message);
+  }
+  renderCfg();
 }
 function saveStart(){const v=document.getElementById('cfg-start').value;if(!v)return;S.start90=v;save();r90();renderCfg()}
 function saveCfg(){
