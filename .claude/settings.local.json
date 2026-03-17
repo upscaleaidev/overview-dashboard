@@ -2,7 +2,13 @@
   "permissions": {
     "allow": [
       "Bash(cd:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(source .env)",
+      "Bash(netlify deploy:*)",
+      "Bash(NETLIFY_AUTH_TOKEN=\"$NETLIFY_AUTH_TOKEN\" netlify deploy --prod --dir=\".\" --site=\"$NETLIFY_SITE_ID\" --auth=\"$NETLIFY_AUTH_TOKEN\")",
+      "Bash(curl -s -X GET \"https://api.netlify.com/api/v1/sites/$NETLIFY_SITE_ID\" -H \"Authorization: Bearer $NETLIFY_AUTH_TOKEN\")",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(d.get\\(''''name'''',''''?''''\\), d.get\\(''''url'''',''''?''''\\)\\)\")",
+      "Bash(curl -s \"https://api.netlify.com/api/v1/sites/$NETLIFY_SITE_ID\" -H \"Authorization: Bearer $NETLIFY_AUTH_TOKEN\")"
     ]
   }
 }
