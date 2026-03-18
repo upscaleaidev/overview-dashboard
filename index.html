@@ -600,6 +600,15 @@ hr{border:none;border-top:1px solid var(--border);margin:16px 0}
       <div class="card-sub" style="margin-top:10px" id="h-avg">Moyenne : —</div>
     </div>
 
+    <!-- WEEKLY TRACKER -->
+    <div class="card gap">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <div class="card-title" style="margin:0">Weekly Tracker</div>
+        <span class="score-badge" id="wt-streak">—</span>
+      </div>
+      <div id="weekly-tracker" style="overflow-x:auto;-webkit-overflow-scrolling:touch"></div>
+    </div>
+
     <!-- CORPS MINI -->
     <div class="g2">
       <div class="card">
@@ -1582,6 +1591,7 @@ function renderHome(){
   renderMiniTodos();
   renderPastDays();
   renderHistory();
+  renderWeeklyTracker();
 }
 function renderMiniTodos(){
   if(!S.todos)return;
@@ -1634,6 +1644,105 @@ function renderHistory(){
     const avg=Math.round(all.reduce((s,h)=>s+h.done/h.total*100,0)/all.length);
     document.getElementById('h-avg').textContent=`Moyenne : ${avg}% · ${all.length} jour${all.length>1?'s':''} tracké${all.length>1?'s':''}`;
   }
+}
+
+// ═══ WEEKLY TRACKER ═══
+function renderWeeklyTracker(){
+  const el=document.getElementById('weekly-tracker');
+  if(!el)return;
+  const today=td();
+  // Tous les jours depuis start90 jusqu'à aujourd'hui
+  const start=new Date((S.start90||'2026-03-13')+'T12:00');
+  const days=[];
+  let cur=new Date(start);
+  while(cur.toISOString().slice(0,10)<=today){days.push(cur.toISOString().slice(0,10));cur.setDate(cur.getDate()+1);}
+  // Ordre des lignes = ordre des todos du jour
+  const todayItems=S.todos||[];
+  const rows=todayItems.map(t=>({id:t.id,label:t.label}));
+  const DAY_MON=['L','M','M','J','V','S','D'];
+  const circ=2*Math.PI*14; // ≈87.96
+  // Header
+  let html='<table style="border-collapse:collapse;min-width:max-content">';
+  html+='<thead><tr>';
+  html+=`<th style="position:sticky;left:0;z-index:6;background:var(--surface);min-width:110px;max-width:140px;padding:0 6px 8px 0;text-align:left;font-family:var(--mono);font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;font-weight:400"></th>`;
+  days.forEach(day=>{
+    const isToday=day===today;
+    const d=new Date(day+'T12:00');
+    const dow=(d.getDay()+6)%7;
+    const letter=DAY_MON[dow];
+    const dateNum=day.slice(8);
+    const hist=isToday?null:(S.todoHistory||[]).find(h=>h.date===day);
+    const items=isToday?(S.todos||[]):(hist?.items||[]);
+    const total=items.length;
+    const done=items.filter(t=>t.done).length;
+    const pct=total>0?Math.round(done/total*100):0;
+    const color=pct>=80?'var(--accent)':pct>=60?'var(--green)':pct>=30?'var(--orange)':'var(--red)';
+    const offset=total>0?circ*(1-pct/100):circ;
+    const todayBorder=isToday?'outline:1px solid rgba(var(--accent-rgb),.35);outline-offset:-2px;border-radius:8px;background:rgba(var(--accent-rgb),.04);':'';
+    html+=`<th style="min-width:44px;text-align:center;padding:0 2px 6px;${todayBorder}">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:1px">
+        <svg width="36" height="36" viewBox="0 0 36 36">
+          <circle cx="18" cy="18" r="14" fill="none" stroke="var(--glass3)" stroke-width="3"/>
+          <circle cx="18" cy="18" r="14" fill="none" stroke="${color}" stroke-width="3" stroke-dasharray="${circ.toFixed(2)}" stroke-dashoffset="${offset.toFixed(2)}" stroke-linecap="round" transform="rotate(-90 18 18)"/>
+          <text x="18" y="23" text-anchor="middle" font-size="11" font-weight="700" fill="${isToday?'var(--accent)':'var(--text2)'}">${letter}</text>
+        </svg>
+        <span style="font-family:var(--mono);font-size:8px;color:var(--muted)">${dateNum}</span>
+        <span style="font-family:var(--mono);font-size:8px;color:${color}">${total>0?pct+'%':'—'}</span>
+      </div>
+    </th>`;
+  });
+  html+='</tr></thead><tbody>';
+  // Lignes items
+  rows.forEach(row=>{
+    html+=`<tr><td style="position:sticky;left:0;z-index:5;background:var(--surface);padding:3px 6px 3px 0;font-family:var(--mono);font-size:8.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;white-space:nowrap;max-width:140px;overflow:hidden;text-overflow:ellipsis" title="${row.label}">${row.label}</td>`;
+    days.forEach(day=>{
+      const isToday=day===today;
+      const hist=isToday?null:(S.todoHistory||[]).find(h=>h.date===day);
+      const items=isToday?(S.todos||[]):(hist?.items||[]);
+      const itemIdx=items.findIndex(t=>t.id===row.id);
+      const item=itemIdx>=0?items[itemIdx]:null;
+      const todayBg=isToday?'background:rgba(var(--accent-rgb),.04);':'';
+      let cell,onclick='';
+      if(!item){
+        cell=`<span style="font-family:var(--mono);font-size:9px;color:var(--muted2)">·</span>`;
+      } else if(item.done){
+        cell=`<div style="width:10px;height:10px;background:var(--accent);border-radius:2px;margin:0 auto"></div>`;
+        onclick=isToday?`onclick="toggleTodo(${itemIdx},true)"`:`onclick="wtToggle('${day}','${row.id}')"`;
+      } else {
+        cell=`<div style="width:10px;height:10px;border:1.5px solid var(--muted2);border-radius:2px;margin:0 auto;opacity:.4"></div>`;
+        onclick=isToday?`onclick="toggleTodo(${itemIdx},true)"`:`onclick="wtToggle('${day}','${row.id}')"`;
+      }
+      html+=`<td style="text-align:center;padding:3px 2px;cursor:${item?'pointer':'default'};${todayBg}" ${onclick} title="${row.label}">${cell}</td>`;
+    });
+    html+='</tr>';
+  });
+  html+='</tbody></table>';
+  el.innerHTML=html;
+  // Auto-scroll vers aujourd'hui (droite)
+  requestAnimationFrame(()=>{el.scrollLeft=el.scrollWidth;});
+  // Streak badge (80%+)
+  const streakEl=document.getElementById('wt-streak');
+  if(streakEl){
+    let streak=0;
+    const rev=[...days].reverse();
+    for(const day of rev){
+      const isToday=day===today;
+      const items=isToday?(S.todos||[]):((S.todoHistory||[]).find(h=>h.date===day)?.items||[]);
+      const total=items.length;const done=items.filter(t=>t.done).length;
+      if(total>0&&done/total>=0.8)streak++;else break;
+    }
+    streakEl.textContent=streak>0?streak+'j 80%+':'—';
+  }
+}
+function wtToggle(date,itemId){
+  if(!S.todoHistory)return;
+  const h=S.todoHistory.find(x=>x.date===date);
+  if(!h||!h.items)return;
+  const item=h.items.find(x=>x.id===itemId);
+  if(!item)return;
+  item.done=!item.done;
+  h.done=h.items.filter(x=>x.done).length;
+  save();renderWeeklyTracker();renderHistory();
 }
 
 // ═══ PAST DAYS ═══
@@ -1765,7 +1874,7 @@ function renderTodo(){
     document.getElementById('td-extra').innerHTML=S.extraTodos.map((t,i)=>_ciHtml(t,i,'extra')).join('');
   }
 }
-function toggleTodo(i,mini){S.todos[i].done=!S.todos[i].done;save();if(mini){renderMiniTodos();renderTodoGauge();renderHistory()}else{renderTodo();renderMiniTodos();renderTodoGauge();renderHistory()}}
+function toggleTodo(i,mini){S.todos[i].done=!S.todos[i].done;save();if(mini){renderMiniTodos();renderTodoGauge();renderHistory();renderWeeklyTracker();}else{renderTodo();renderMiniTodos();renderTodoGauge();renderHistory();}}
 function toggleExtra(i){S.extraTodos[i].done=!S.extraTodos[i].done;save();renderTodo()}
 function editTask(i,list){
   const arr=list==='todos'?S.todos:S.extraTodos;
