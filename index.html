@@ -1107,24 +1107,45 @@ function showSync(icon){
 
 // ═══ STATE ═══
 const DAILY=[
-  {id:'t2',label:'Méditation 30 min',done:false,cat:'mental'},
-  {id:'t3',label:'Prospecter 20 entreprises',done:false,cat:'business'},
-  {id:'t4',label:'Travail agence 3h+',done:false,cat:'business',scheduleTag:'agence'},
-  {id:'t5',label:'Code de la route 1h',done:false,cat:'code',scheduleTag:'route'},
-  {id:'t6',label:'n8n / IA 30 min',done:false,cat:'ia',scheduleTag:'n8n'},
-  {id:'t7',label:'2L eau minimum',done:false,cat:'corps'},
-  {id:'t8',label:'Lumière du jour 15 min',done:false,cat:'corps'},
-  {id:'t9',label:'Lecture 30 min',done:false,cat:'mental'},
-  {id:'t10',label:'Couché avant minuit',done:false,cat:'mental'},
-  {id:'t11',label:'No fap',done:false,cat:'discipline'},
-  {id:'t12',label:'No Sofia',done:false,cat:'discipline'},
-  {id:'t13',label:'No doomscroll',done:false,cat:'discipline'},
-  {id:'t19',label:'No smoke',done:false,cat:'discipline'},
-  {id:'t14',label:'Créatine',done:false,cat:'corps'},
-  {id:'t15',label:'Whey',done:false,cat:'corps'},
-  {id:'t16',label:'Oméga 3',done:false,cat:'corps'},
-  {id:'t17',label:'Sport du jour ✓',done:false,cat:'sport'},
-  {id:'t18',label:'Nutrition complète ✓',done:false,cat:'nutrition'},
+  // MATIN
+  {id:'t22',label:'Hygiène réveil',done:false,cat:'mental',group:'matin'},
+  {id:'t25',label:'1 big dump morning',done:false,cat:'mental',group:'matin'},
+  {id:'t26',label:'2 priorités morning',done:false,cat:'mental',group:'matin'},
+  {id:'t27',label:'3 gratitudes morning',done:false,cat:'mental',group:'matin'},
+  {id:'t32',label:'Lecture matin',done:false,cat:'mental',group:'matin'},
+  // SPORT
+  {id:'t17',label:'Sport du jour ✓',done:false,cat:'sport',group:'sport'},
+  // CORPS
+  {id:'t7',label:'2L eau minimum',done:false,cat:'corps',group:'corps'},
+  {id:'t8',label:'Lumière du jour 15 min',done:false,cat:'corps',group:'corps'},
+  {id:'t20',label:'150g protéines',done:false,cat:'corps',group:'corps'},
+  {id:'t21',label:'Electrolytes',done:false,cat:'corps',group:'corps'},
+  {id:'t14',label:'Créatine',done:false,cat:'corps',group:'corps'},
+  {id:'t15',label:'Whey',done:false,cat:'corps',group:'corps'},
+  {id:'t16',label:'Oméga 3',done:false,cat:'corps',group:'corps'},
+  // BUSINESS
+  {id:'t3',label:'Prospecter 20 entreprises',done:false,cat:'business',group:'business'},
+  {id:'t4',label:'Travail agence 3h+',done:false,cat:'business',scheduleTag:'agence',group:'business'},
+  {id:'t5',label:'Code de la route 1h',done:false,cat:'code',scheduleTag:'route',group:'business'},
+  {id:'t6',label:'n8n / IA 30 min',done:false,cat:'ia',scheduleTag:'n8n',group:'business'},
+  // NUTRITION
+  {id:'t18',label:'Nutrition complète ✓',done:false,cat:'nutrition',group:'nutrition'},
+  {id:'t31',label:'Walk 15mn post nutrition',done:false,cat:'corps',group:'nutrition'},
+  // SOIR
+  {id:'t2',label:'Méditation 30 min',done:false,cat:'mental',group:'soir'},
+  {id:'t33',label:'Lecture soir',done:false,cat:'mental',group:'soir'},
+  {id:'t28',label:'1 big dump soir',done:false,cat:'mental',group:'soir'},
+  {id:'t29',label:'Préparer le lendemain',done:false,cat:'mental',group:'soir'},
+  {id:'t30',label:'3 gratitudes soir',done:false,cat:'mental',group:'soir'},
+  {id:'t23',label:'Hygiène couché',done:false,cat:'mental',group:'soir'},
+  {id:'t24',label:'Alarm coucher',done:false,cat:'mental',group:'soir'},
+  // DISCIPLINE
+  {id:'t11',label:'No fap',done:false,cat:'discipline',group:'discipline'},
+  {id:'t13',label:'No doomscroll',done:false,cat:'discipline',group:'discipline'},
+  {id:'t12',label:'No Sofia',done:false,cat:'discipline',activeDays:[0,2,3,4,6],group:'discipline'},
+  {id:'t19',label:'No smoke',done:false,cat:'discipline',group:'discipline'},
+  // SOMMEIL
+  {id:'t10',label:'Couché avant minuit',done:false,cat:'mental',group:'sommeil'},
 ];
 
 // ═══ DONNÉES INITIALES (backup 15 mars intégré) ═══
@@ -1264,6 +1285,18 @@ if(!S||!S._ts||S._ts===0){
     if(!S.sportChecks[k])S.sportChecks[k]=DEFAULT_STATE.sportChecks[k];
   });
 }
+// Migration baseRoutine : ajouter t20-t33, supprimer t9, ajouter activeDays à t12
+if(S.baseRoutine&&!S.baseRoutine.find(x=>x.id==='t20')){
+  const newItems=DAILY.filter(d=>!S.baseRoutine.find(b=>b.id===d.id));
+  S.baseRoutine.push(...newItems.map(x=>({id:x.id,label:x.label,cat:x.cat,group:x.group,activeDays:x.activeDays,scheduleTag:x.scheduleTag})));
+  S.baseRoutine=S.baseRoutine.filter(x=>x.id!=='t9');
+  const t12=S.baseRoutine.find(x=>x.id==='t12');
+  if(t12&&!t12.activeDays)t12.activeDays=[0,2,3,4,6];
+  if(t12&&!t12.group)t12.group='discipline';
+  // Ajouter group aux items existants si manquant
+  S.baseRoutine.forEach(br=>{const d=DAILY.find(x=>x.id===br.id);if(d){if(!br.group)br.group=d.group;if(!br.activeDays&&d.activeDays)br.activeDays=d.activeDays;}});
+  S.checkDate=null; // Force rebuild des todos du jour
+}
 localStorage.setItem('jtb3',JSON.stringify(S));
 const save=()=>{
   S._ts=Date.now();
@@ -1291,7 +1324,7 @@ const td=()=>new Date().toISOString().slice(0,10);
 const tm=()=>td().slice(0,7);
 
 function getBaseRoutine(){
-  if(!S.baseRoutine||!S.baseRoutine.length)S.baseRoutine=DAILY.map(x=>({id:x.id,label:x.label,cat:x.cat}));
+  if(!S.baseRoutine||!S.baseRoutine.length)S.baseRoutine=DAILY.map(x=>({id:x.id,label:x.label,cat:x.cat,group:x.group,activeDays:x.activeDays,scheduleTag:x.scheduleTag}));
   return S.baseRoutine;
 }
 function calcBedtime(wakeupH){
@@ -1319,16 +1352,20 @@ function buildTodosForDay(base,dateStr){
   // Calcul heure coucher selon premier event de demain
   const wakeup=getTomorrowWakeup(dateStr);
   const sleepLabel=wakeup!==null?'Couché avant '+calcBedtime(wakeup):'Couché avant minuit';
+  // Jour de la semaine Monday-based (0=lundi...6=dimanche)
+  const dow=(new Date(dateStr+'T12:00').getDay()+6)%7;
   return base.map(x=>{
     const daily=dailyMap[x.id];
     // Items à label dynamique
-    if(x.id==='t10')return{...x,label:sleepLabel,done:false};
+    if(x.id==='t10')return{...x,label:sleepLabel,group:daily?.group,done:false};
+    // Filtre activeDays (ex: No Sofia seulement certains jours)
+    if(daily&&daily.activeDays&&!daily.activeDays.includes(dow))return null;
     // Items filtrés par agenda (scheduleTag)
     if(daily&&daily.scheduleTag&&hasAgenda){
       const tag=daily.scheduleTag.toLowerCase();
       if(!todayLabels.some(l=>l.includes(tag)))return null;
     }
-    return{...x,done:false};
+    return{...x,group:daily?.group,done:false};
   }).filter(Boolean);
 }
 function dailyReset(){
@@ -1710,7 +1747,15 @@ function renderTodo(){
     document.getElementById('td-score').textContent=`${done}/${items.length} — ${Math.round(done/items.length*100)||0}% (rétro)`;
     document.getElementById('td-extra').innerHTML='<div style="color:var(--muted);font-size:11px;font-style:italic;padding:8px 0">Mode rétroactif — tâches business non affichées</div>';
   } else {
-    document.getElementById('td-list').innerHTML=S.todos.map((t,i)=>_ciHtml(t,i,'todos')).join('');
+    const GROUP_LABELS={matin:'🌅 MATIN',corps:'💪 CORPS',business:'💼 BUSINESS',nutrition:'🍽 NUTRITION',soir:'🌙 SOIR',discipline:'🔒 DISCIPLINE',sommeil:'😴 SOMMEIL'};
+    let lastGroup=null;
+    const html=S.todos.map((t,i)=>{
+      let h='';
+      const grp=t.group||'';
+      if(grp&&GROUP_LABELS[grp]&&grp!==lastGroup){h=`<div class="slabel">${GROUP_LABELS[grp]}</div>`;lastGroup=grp;}
+      return h+_ciHtml(t,i,'todos');
+    }).join('');
+    document.getElementById('td-list').innerHTML=html;
     const done=S.todos.filter(t=>t.done).length;
     document.getElementById('td-score').textContent=`${done}/${S.todos.length} — ${Math.round(done/S.todos.length*100)||0}%`;
     document.getElementById('td-extra').innerHTML=S.extraTodos.map((t,i)=>_ciHtml(t,i,'extra')).join('');
