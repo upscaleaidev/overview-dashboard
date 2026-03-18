@@ -1315,6 +1315,10 @@ const save=()=>{
   _idbSave(S);
   scheduleFirebaseBackup();
   showLastSave();
+  // Backup local automatique (serveur local uniquement)
+  if(location.hostname==='localhost'||location.hostname==='127.0.0.1'){
+    fetch('/backup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(S)}).catch(()=>{});
+  }
 };
 function showLastSave(){
   const el=document.getElementById('last-save');
