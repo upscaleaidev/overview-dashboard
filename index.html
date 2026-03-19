@@ -1258,72 +1258,7 @@ const DEFAULT_STATE={
   baseRoutine:null
 };
 
-let S=JSON.parse(localStorage.getItem('jtb3')||'null');
-// Si pas de données locales OU données vides, utiliser le backup
-if(!S||!S._ts||S._ts===0){
-  S={...DEFAULT_STATE,_ts:Date.now()};
-} else {
-  // Fusionner l'historique manquant du backup
-  if(!S.todoHistory)S.todoHistory=[];
-  DEFAULT_STATE.todoHistory.forEach(dh=>{
-    if(!S.todoHistory.find(h=>h.date===dh.date)){
-      S.todoHistory.push(dh);
-    }
-  });
-  // S'assurer que start90 est défini
-  if(!S.start90)S.start90=DEFAULT_STATE.start90;
-  // Fusionner nutritionChecks manquants
-  if(!S.nutritionChecks)S.nutritionChecks={};
-  Object.keys(DEFAULT_STATE.nutritionChecks).forEach(k=>{
-    if(!S.nutritionChecks[k])S.nutritionChecks[k]=DEFAULT_STATE.nutritionChecks[k];
-  });
-  // Fusionner sportChecks manquants
-  if(!S.sportChecks)S.sportChecks={};
-  Object.keys(DEFAULT_STATE.sportChecks).forEach(k=>{
-    if(!S.sportChecks[k])S.sportChecks[k]=DEFAULT_STATE.sportChecks[k];
-  });
-}
-// Migration baseRoutine : ajouter t20-t35, supprimer t9, ajouter activeDays à t12
-if(S.baseRoutine&&!S.baseRoutine.find(x=>x.id==='t20')){
-  const newItems=DAILY.filter(d=>!S.baseRoutine.find(b=>b.id===d.id));
-  S.baseRoutine.push(...newItems.map(x=>({id:x.id,label:x.label,cat:x.cat,group:x.group,activeDays:x.activeDays,scheduleTag:x.scheduleTag})));
-  S.baseRoutine=S.baseRoutine.filter(x=>x.id!=='t9');
-  const t12=S.baseRoutine.find(x=>x.id==='t12');
-  if(t12&&!t12.activeDays)t12.activeDays=[0,2,3,4,6];
-  if(t12&&!t12.group)t12.group='discipline';
-  S.baseRoutine.forEach(br=>{const d=DAILY.find(x=>x.id===br.id);if(d){if(!br.group)br.group=d.group;if(!br.activeDays&&d.activeDays)br.activeDays=d.activeDays;}});
-  S.checkDate=null;
-}
-// Déduplication todoHistory (une seule entrée par date, garde la plus complète)
-if(S.todoHistory&&S.todoHistory.length){
-  const byDate={};
-  S.todoHistory.forEach(h=>{
-    if(!byDate[h.date]||h.done>byDate[h.date].done||(h.items&&h.items.length>(byDate[h.date].items||[]).length))
-      byDate[h.date]=h;
-  });
-  S.todoHistory=Object.values(byDate).sort((a,b)=>a.date.localeCompare(b.date));
-}
-// Migration t34/t35 : No Alcohol + No Video Games
-if(S.baseRoutine&&!S.baseRoutine.find(x=>x.id==='t34')){
-  ['t34','t35'].forEach(id=>{const d=DAILY.find(x=>x.id===id);if(d&&!S.baseRoutine.find(b=>b.id===id))S.baseRoutine.push({id:d.id,label:d.label,cat:d.cat,group:d.group});});
-  S.checkDate=null;
-}
-// Migration t3 label : Prospecter → Travail Agence
-if(S.baseRoutine){const t3=S.baseRoutine.find(x=>x.id==='t3');if(t3&&t3.label==='Prospecter 20 entreprises')t3.label='Travail Agence';}
-// Migration weekTemplate v2 (nouveau planning)
-if(!S.planTemplateV||S.planTemplateV<2){
-  S.weekTemplate=null;
-  S.agendaSynced={};
-  S.agendaEvents=(S.agendaEvents||[]).filter(ev=>!ev.fromTmpl);
-  S.planTemplateV=2;
-  S.checkDate=null;
-}
-// Injection events spéciaux
-if(!S.agendaEvents)S.agendaEvents=[];
-if(!S.agendaEvents.find(e=>e.id==='ev-ortho')){
-  S.agendaEvents.push({id:'ev-ortho',label:'Orthodontiste',startH:10,endH:11,color:'rest',date:'2026-04-14',fromTmpl:false});
-}
-localStorage.setItem('jtb3',JSON.stringify(S));
+let S={};
 const save=()=>{
   S._ts=Date.now();
   try{
@@ -2961,15 +2896,86 @@ function syncAutoChecks(){
   const a=localStorage.getItem('life_accent')||'lime';
   document.documentElement.setAttribute('data-theme',t);
   document.documentElement.setAttribute('data-accent',a);
-  // On a toujours des données maintenant (backup intégré), donc cacher l'overlay
+  // Afficher l'overlay pendant le chargement
+  const overlay=document.getElementById('loading-overlay');
+  if(overlay)overlay.style.display='flex';
+})();
+
+function runMigrations(){
+  // Fusionner DEFAULT_STATE manquant
+  if(!S.todoHistory)S.todoHistory=[];
+  DEFAULT_STATE.todoHistory.forEach(dh=>{if(!S.todoHistory.find(h=>h.date===dh.date))S.todoHistory.push(dh);});
+  if(!S.start90)S.start90=DEFAULT_STATE.start90;
+  if(!S.nutritionChecks)S.nutritionChecks={};
+  Object.keys(DEFAULT_STATE.nutritionChecks).forEach(k=>{if(!S.nutritionChecks[k])S.nutritionChecks[k]=DEFAULT_STATE.nutritionChecks[k];});
+  if(!S.sportChecks)S.sportChecks={};
+  Object.keys(DEFAULT_STATE.sportChecks).forEach(k=>{if(!S.sportChecks[k])S.sportChecks[k]=DEFAULT_STATE.sportChecks[k];});
+  // Déduplication todoHistory
+  if(S.todoHistory&&S.todoHistory.length){
+    const byDate={};
+    S.todoHistory.forEach(h=>{if(!byDate[h.date]||h.done>byDate[h.date].done||(h.items&&h.items.length>(byDate[h.date].items||[]).length))byDate[h.date]=h;});
+    S.todoHistory=Object.values(byDate).sort((a,b)=>a.date.localeCompare(b.date));
+  }
+  // Déduplication agendaEvents
+  if(S.agendaEvents&&S.agendaEvents.length){
+    const seen=new Set();
+    S.agendaEvents=S.agendaEvents.filter(ev=>{const k=ev.date+'|'+(ev.tmplId||ev.id)+'|'+ev.startH;if(seen.has(k))return false;seen.add(k);return true;});
+  }
+  // Migration baseRoutine
+  if(S.baseRoutine&&!S.baseRoutine.find(x=>x.id==='t20')){
+    const newItems=DAILY.filter(d=>!S.baseRoutine.find(b=>b.id===d.id));
+    S.baseRoutine.push(...newItems.map(x=>({id:x.id,label:x.label,cat:x.cat,group:x.group,activeDays:x.activeDays,scheduleTag:x.scheduleTag})));
+    S.baseRoutine=S.baseRoutine.filter(x=>x.id!=='t9');
+    const t12=S.baseRoutine.find(x=>x.id==='t12');
+    if(t12&&!t12.activeDays)t12.activeDays=[0,2,3,4,6];
+    if(t12&&!t12.group)t12.group='discipline';
+    S.baseRoutine.forEach(br=>{const d=DAILY.find(x=>x.id===br.id);if(d){if(!br.group)br.group=d.group;if(!br.activeDays&&d.activeDays)br.activeDays=d.activeDays;}});
+    S.checkDate=null;
+  }
+  if(S.baseRoutine&&!S.baseRoutine.find(x=>x.id==='t34')){
+    ['t34','t35'].forEach(id=>{const d=DAILY.find(x=>x.id===id);if(d&&!S.baseRoutine.find(b=>b.id===id))S.baseRoutine.push({id:d.id,label:d.label,cat:d.cat,group:d.group});});
+    S.checkDate=null;
+  }
+  if(S.baseRoutine){const t3=S.baseRoutine.find(x=>x.id==='t3');if(t3&&t3.label==='Prospecter 20 entreprises')t3.label='Travail Agence';}
+  if(!S.planTemplateV||S.planTemplateV<2){
+    S.weekTemplate=null;S.agendaSynced={};
+    S.agendaEvents=(S.agendaEvents||[]).filter(ev=>!ev.fromTmpl);
+    S.planTemplateV=2;S.checkDate=null;
+  }
+  if(!S.agendaEvents)S.agendaEvents=[];
+  if(!S.agendaEvents.find(e=>e.id==='ev-ortho'))
+    S.agendaEvents.push({id:'ev-ortho',label:'Orthodontiste',startH:10,endH:11,color:'rest',date:'2026-04-14',fromTmpl:false});
+}
+
+async function initApp(){
+  // 1. Charger depuis le serveur (source principale = fichier disque)
+  let serverData=null;
+  try{const r=await fetch('/backup/latest');if(r.ok)serverData=await r.json();}catch(e){}
+  // 2. Charger depuis localStorage (secondaire)
+  let localData=null;
+  try{localData=JSON.parse(localStorage.getItem('jtb3')||'null');}catch(e){}
+  // 3. Choisir la plus récente
+  if(serverData&&serverData._ts&&localData&&localData._ts){
+    S=serverData._ts>=localData._ts?serverData:localData;
+  }else{
+    S=serverData||localData||{...DEFAULT_STATE,_ts:Date.now()};
+  }
+  if(!S._ts||S._ts===0)Object.assign(S,{...DEFAULT_STATE,_ts:Date.now()});
+  // 4. Migrations + déduplication
+  runMigrations();
+  // 5. Sync vers localStorage et disque
+  try{localStorage.setItem('jtb3',JSON.stringify(S));}catch(e){}
+  fetch('/backup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(S)}).catch(()=>{});
+  // 6. Démarrer l'app
   const overlay=document.getElementById('loading-overlay');
   if(overlay)overlay.style.display='none';
-})();
-initPlanState();dailyReset();initFirebase();
-go(sessionStorage.getItem('activeView')||'home');
-updateAppearanceUI();
-setInterval(()=>{dailyReset();r90()},60000);
-setInterval(()=>{save();},30000);
+  initPlanState();dailyReset();initFirebase();
+  go(sessionStorage.getItem('activeView')||'home');
+  updateAppearanceUI();
+  setInterval(()=>{dailyReset();r90();},60000);
+  setInterval(()=>{save();},30000);
+}
+initApp();
 </script>
 </body>
 </html>
