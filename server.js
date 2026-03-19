@@ -1,7 +1,7 @@
 /**
  * Life+ Local Server
  * - Sert index.html sur http://localhost:3000
- * - Sauvegarde automatique des données dans C:\Users\369\Life+_Data\backups\
+ * - Sauvegarde automatique des données dans ./Life+_Data/backups/
  */
 const http = require('http');
 const fs = require('fs');
@@ -10,7 +10,7 @@ const url = require('url');
 
 const PORT = 3000;
 const APP_DIR = __dirname;
-const BACKUP_DIR = path.join('C:\\Users\\369\\Life+_Data\\backups');
+const BACKUP_DIR = path.join(APP_DIR, 'Life+_Data', 'backups');
 
 // S'assurer que le dossier backup existe
 if (!fs.existsSync(BACKUP_DIR)) fs.mkdirSync(BACKUP_DIR, { recursive: true });
