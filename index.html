@@ -2912,10 +2912,12 @@ function runMigrations(){
   Object.keys(DEFAULT_STATE.nutritionChecks).forEach(k=>{if(!S.nutritionChecks[k])S.nutritionChecks[k]=DEFAULT_STATE.nutritionChecks[k];});
   if(!S.sportChecks)S.sportChecks={};
   Object.keys(DEFAULT_STATE.sportChecks).forEach(k=>{if(!S.sportChecks[k])S.sportChecks[k]=DEFAULT_STATE.sportChecks[k];});
-  // Déduplication todoHistory
+  // Déduplication todoHistory — priorité : plus de "done" (jamais écraser des vraies données par des entrées vides)
   if(S.todoHistory&&S.todoHistory.length){
     const byDate={};
-    S.todoHistory.forEach(h=>{if(!byDate[h.date]||h.done>byDate[h.date].done||(h.items&&h.items.length>(byDate[h.date].items||[]).length))byDate[h.date]=h;});
+    S.todoHistory.forEach(h=>{
+      if(!byDate[h.date]||h.done>byDate[h.date].done)byDate[h.date]=h;
+    });
     S.todoHistory=Object.values(byDate).sort((a,b)=>a.date.localeCompare(b.date));
   }
   // Déduplication agendaEvents (fromTmpl: par date+tmplId ; manuel: par date+label+startH)
@@ -2926,11 +2928,13 @@ function runMigrations(){
       if(seen.has(k))return false;seen.add(k);return true;
     });
   }
-  // Migration baseRoutine
-  if(S.baseRoutine){
-    // Supprimer t4 (doublon de t3 "Travail Agence")
+  // Migration baseRoutine — supprimer t4 (doublon de t3 "Travail Agence")
+  if(S.baseRoutine&&S.baseRoutine.find(x=>x.id==='t4')){
     S.baseRoutine=S.baseRoutine.filter(x=>x.id!=='t4');
+    S.checkDate=null; // Force rebuild des todos du jour
   }
+  // Si les todos actuels contiennent encore t4, forcer le rebuild
+  if(S.todos&&S.todos.find(x=>x.id==='t4')){S.todos=[];S.checkDate=null;}
   if(S.baseRoutine&&!S.baseRoutine.find(x=>x.id==='t20')){
     const newItems=DAILY.filter(d=>!S.baseRoutine.find(b=>b.id===d.id));
     S.baseRoutine.push(...newItems.map(x=>({id:x.id,label:x.label,cat:x.cat,group:x.group,activeDays:x.activeDays,scheduleTag:x.scheduleTag})));
