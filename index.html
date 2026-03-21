@@ -1454,6 +1454,10 @@ const tm=()=>td().slice(0,7);
 
 function getBaseRoutine(){
   if(!S.baseRoutine||!S.baseRoutine.length)S.baseRoutine=DAILY.map(x=>({id:x.id,label:x.label,cat:x.cat,group:x.group,activeDays:x.activeDays,scheduleTag:x.scheduleTag}));
+  // Reconcile: remove items no longer in DAILY, add new ones
+  const dailyIds=new Set(DAILY.map(d=>d.id));
+  S.baseRoutine=S.baseRoutine.filter(x=>dailyIds.has(x.id));
+  DAILY.forEach(d=>{if(!S.baseRoutine.find(x=>x.id===d.id))S.baseRoutine.push({id:d.id,label:d.label,cat:d.cat,group:d.group,activeDays:d.activeDays,scheduleTag:d.scheduleTag});});
   return S.baseRoutine;
 }
 function calcBedtime(wakeupH){
@@ -1499,6 +1503,9 @@ function buildTodosForDay(base,dateStr){
 function dailyReset(){
   const t=td();
   if(!S.todoHistory)S.todoHistory=[];
+  // Dedup + remove future entries from todoHistory
+  const _seen=new Set();
+  S.todoHistory=S.todoHistory.filter(h=>{if(_seen.has(h.date)||h.date>t)return false;_seen.add(h.date);return true;});
   const base=getBaseRoutine();
   if(S.checkDate!==t){
     // Backup local avant le reset (garde 7 jours)
@@ -1520,6 +1527,13 @@ function dailyReset(){
   } else if(!S.todos||!S.todos.length){
     // Seulement si vide — évite le rebuild toutes les 60s
     S.todos=buildTodosForDay(base,t);save();
+  }
+  // Reconcile: remove stale items from today's todos (e.g. removed from DAILY)
+  if(S.todos&&S.todos.length){
+    const validIds=new Set(DAILY.map(d=>d.id));
+    const before=S.todos.length;
+    S.todos=S.todos.filter(x=>validIds.has(x.id)||!x.id.startsWith('t'));
+    if(S.todos.length!==before)save();
   }
 }
 
