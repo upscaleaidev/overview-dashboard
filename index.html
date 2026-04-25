@@ -1316,27 +1316,15 @@ const DAILY=[
   {id:'t10',label:'Couché avant minuit',done:false,cat:'mental',group:'sommeil'},
 ];
 
-// ═══ DONNÉES INITIALES (backup 15 mars intégré) ═══
+// ═══ ÉTAT INITIAL VIERGE ═══
 const DEFAULT_STATE={
-  start90:"2026-03-13",
+  start90:null,
   poidsObj:70,
   revObj:2000,
-  revenus:[
-    {date:"2026-03-13",label:"Sandrine",val:15},
-    {date:"2026-03-13",label:"Bitstack",val:15},
-    {date:"2026-03-13",label:"N",val:2},
-    {date:"2026-03-14",label:"Joelle",val:15}
-  ],
-  depenses:[
-    {date:"2026-03-13",label:"Claude",val:20},
-    {date:"2026-03-13",label:"Api claude",val:6},
-    {date:"2026-03-13",label:"Api openAI",val:6}
-  ],
-  seances:[
-    {date:"2026-03-13",type:"Circuit"},
-    {date:"2026-03-14",type:"Pump"}
-  ],
-  poids:[{date:"2026-03-15",val:71}],
+  revenus:[],
+  depenses:[],
+  seances:[],
+  poids:[],
   todos:null,
   extraTodos:[],
   prospects:{},
@@ -1344,86 +1332,9 @@ const DEFAULT_STATE={
   checkDate:null,
   _ts:0,
   journalEntries:{},
-  todoHistory:[
-    {date:"2026-03-13",done:16,total:19,lifeScore:84,items:[
-      {id:"t2",label:"Méditation 30 min",cat:"mental",done:true},
-      {id:"t3",label:"Prospecter 20 entreprises",cat:"business",done:true},
-      {id:"t7",label:"2L eau minimum",cat:"corps",done:true},
-      {id:"t8",label:"Lumière du jour 15 min",cat:"corps",done:true},
-      {id:"t9",label:"Lecture 30 min",cat:"mental",done:true},
-      {id:"t10",label:"Couché avant minuit",cat:"mental",done:true},
-      {id:"t11",label:"No fap",cat:"discipline",done:true},
-      {id:"t12",label:"No Sofia",cat:"discipline",done:true},
-      {id:"t13",label:"No doomscroll",cat:"discipline",done:true},
-      {id:"t19",label:"No smoke",cat:"discipline",done:true},
-      {id:"t14",label:"Créatine",cat:"corps",done:true},
-      {id:"t15",label:"Whey",cat:"corps",done:true},
-      {id:"t16",label:"Oméga 3",cat:"corps",done:true},
-      {id:"t17",label:"Sport du jour ✓",cat:"sport",done:true},
-      {id:"t18",label:"Nutrition complète ✓",cat:"nutrition",done:true}
-    ]},
-    {date:"2026-03-14",done:11,total:15,lifeScore:73,items:[
-      {id:"t2",label:"Méditation 30 min",cat:"mental",done:true},
-      {id:"t3",label:"Prospecter 20 entreprises",cat:"business",done:false},
-      {id:"t7",label:"2L eau minimum",cat:"corps",done:true},
-      {id:"t8",label:"Lumière du jour 15 min",cat:"corps",done:true},
-      {id:"t9",label:"Lecture 30 min",cat:"mental",done:false},
-      {id:"t10",label:"Couché avant 0h45",cat:"mental",done:false},
-      {id:"t11",label:"No fap",cat:"discipline",done:true},
-      {id:"t12",label:"No Sofia",cat:"discipline",done:false},
-      {id:"t13",label:"No doomscroll",cat:"discipline",done:true},
-      {id:"t19",label:"No smoke",cat:"discipline",done:true},
-      {id:"t14",label:"Créatine",cat:"corps",done:true},
-      {id:"t15",label:"Whey",cat:"corps",done:true},
-      {id:"t16",label:"Oméga 3",cat:"corps",done:true},
-      {id:"t17",label:"Sport du jour ✓",cat:"sport",done:true},
-      {id:"t18",label:"Nutrition complète ✓",cat:"nutrition",done:true}
-    ]},
-    {date:"2026-03-15",done:9,total:15,lifeScore:60,items:[
-      {id:"t2",label:"Méditation 30 min",cat:"mental",done:false},
-      {id:"t3",label:"Prospecter 20 entreprises",cat:"business",done:false},
-      {id:"t7",label:"2L eau minimum",cat:"corps",done:true},
-      {id:"t8",label:"Lumière du jour 15 min",cat:"corps",done:true},
-      {id:"t9",label:"Lecture 30 min",cat:"mental",done:true},
-      {id:"t10",label:"Couché avant minuit",cat:"mental",done:false},
-      {id:"t11",label:"No fap",cat:"discipline",done:true},
-      {id:"t12",label:"No Sofia",cat:"discipline",done:true},
-      {id:"t13",label:"No doomscroll",cat:"discipline",done:false},
-      {id:"t19",label:"No smoke",cat:"discipline",done:false},
-      {id:"t14",label:"Créatine",cat:"corps",done:true},
-      {id:"t15",label:"Whey",cat:"corps",done:true},
-      {id:"t16",label:"Oméga 3",cat:"corps",done:false},
-      {id:"t17",label:"Sport du jour ✓",cat:"sport",done:true},
-      {id:"t18",label:"Nutrition complète ✓",cat:"nutrition",done:true}
-    ]},
-    {date:"2026-03-16",done:0,total:15,lifeScore:0,items:[
-      {id:"t2",label:"Méditation 30 min",cat:"mental",done:false},
-      {id:"t3",label:"Prospecter 20 entreprises",cat:"business",done:false},
-      {id:"t7",label:"2L eau minimum",cat:"corps",done:false},
-      {id:"t8",label:"Lumière du jour 15 min",cat:"corps",done:false},
-      {id:"t9",label:"Lecture 30 min",cat:"mental",done:false},
-      {id:"t10",label:"Couché avant minuit",cat:"mental",done:false},
-      {id:"t11",label:"No fap",cat:"discipline",done:false},
-      {id:"t12",label:"No Sofia",cat:"discipline",done:false},
-      {id:"t13",label:"No doomscroll",cat:"discipline",done:false},
-      {id:"t19",label:"No smoke",cat:"discipline",done:false},
-      {id:"t14",label:"Créatine",cat:"corps",done:false},
-      {id:"t15",label:"Whey",cat:"corps",done:false},
-      {id:"t16",label:"Oméga 3",cat:"corps",done:false},
-      {id:"t17",label:"Sport du jour ✓",cat:"sport",done:false},
-      {id:"t18",label:"Nutrition complète ✓",cat:"nutrition",done:false}
-    ]}
-  ],
-  nutritionChecks:{
-    "2026-03-13":{breakfast:0,lunch:0,snack:1,dinner:0},
-    "2026-03-14":{breakfast:0,lunch:0,snack:1,dinner:1},
-    "2026-03-15":{breakfast:0,lunch:true,snack:1,dinner:0}
-  },
-  sportChecks:{
-    "2026-03-13":{"w0":true,"w1":true,"w2":true,"w3":true,"w4":true,"se18-t1":true,"se18-t2":true,"se18-t3":true,"se18-t4":true,"se19-t1":true,"se19-t2":true,"se19-t3":true,"se19-t4":true,"se20-t1":true,"se20-t2":true,"se20-t3":true,"se20-t4":true,"se21-t1":true,"se21-t2":true,"se21-t3":true,"se21-t4":true,"se22-t1":true,"se22-t2":true,"se22-t3":true,"se22-t4":true,"rest-t1":true,"rest-t2":true,"rest-t3":true,"rest-t4":true,"str0":true,"str1":true,"str2":true,"str3":true,"str4":true},
-    "2026-03-14":{"w0":true,"w1":true,"w2":true,"w3":true,"w4":true,"se23-t1":true,"se23-t2":true,"se23-t3":true,"se23-t4":true,"se24-t1":true,"se24-t2":true,"se24-t3":true,"se24-t4":true,"se25-t1":true,"se25-t2":true,"se25-t3":true,"se25-t4":true,"se26-t1":true,"se26-t2":true,"se26-t3":true,"se26-t4":true,"rest-t1":true,"rest-t2":true,"rest-t3":true,"rest-t4":true,"str0":true,"str1":true,"str2":true,"str3":true,"str4":true},
-    "2026-03-15":{"w0":true,"w1":true,"w2":true,"w3":true,"se27":true,"str0":true,"str1":true,"str2":true,"str3":true,"str4":true,"str5":true}
-  },
+  todoHistory:[],
+  nutritionChecks:{},
+  sportChecks:{},
   agendaSynced:{},
   agendaExclusions:{},
   baseRoutine:null
